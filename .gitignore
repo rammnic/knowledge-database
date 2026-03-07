@@ -51,6 +51,7 @@ prisma/*.db-journal
 data/
 *.sqlite
 *.sqlite3
+.temp/
 
 # Logs
 *.log
@@ -64,3 +65,7 @@ logs/
 
 # OS
 Thumbs.db
+
+# Cline
+.clineignore
+.clinerules
