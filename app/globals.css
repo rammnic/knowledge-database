@@ -226,3 +226,13 @@ body {
   background: rgba(34, 211, 238, 0.3);
   color: white;
 }
+
+/* Wikilinks styles */
+.prose a.wikilink {
+  @apply text-blue-400 hover:text-blue-300 underline decoration-dotted;
+  cursor: pointer;
+}
+
+.prose a.wikilink:hover {
+  @apply decoration-solid;
+}

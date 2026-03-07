@@ -9,8 +9,31 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+// Получаем все заметки для создания мапы title -> slug (для wikilinks)
+// Поддерживает как title на русском, так и slug на английском
+async function getAllNotesMap(): Promise<Record<string, string>> {
+  const notes = await prisma.note.findMany({
+    where: { status: "PUBLIC" },
+    select: { title: true, slug: true },
+  });
+  
+  const map: Record<string, string> = {};
+  for (const note of notes) {
+    // Добавляем по title (на любом языке)
+    map[note.title.toLowerCase()] = note.slug;
+    // Добавляем по slug без дефисов (чтобы [[Linux Command Line Basics]] -> linux-command-line-basics)
+    map[note.slug.toLowerCase().replace(/-/g, ' ')] = note.slug;
+    // Добавляем сам slug
+    map[note.slug.toLowerCase()] = note.slug;
+  }
+  return map;
+}
+
 export default async function NotePage({ params }: PageProps) {
   const { slug } = await params;
+
+  // Предзагружаем мапу всех заметок для wikilinks
+  const noteTitles = await getAllNotesMap();
 
   const note = await prisma.note.findUnique({
     where: { slug, status: "PUBLIC" },
@@ -85,7 +108,7 @@ export default async function NotePage({ params }: PageProps) {
                 </div>
               </header>
 
-              <MarkdownRenderer content={note.content} />
+              <MarkdownRenderer content={note.content} noteTitles={noteTitles} />
             </article>
           </main>
 

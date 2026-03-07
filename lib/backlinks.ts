@@ -6,6 +6,7 @@ type PrismaTx = Prisma.TransactionClient;
 interface NoteBasic {
   id: string;
   title: string;
+  slug: string;
 }
 
 // Process [[wikilinks]] and create backlinks
@@ -28,7 +29,7 @@ export async function processBacklinks(
   if (!allNotes) {
     allNotes = await db.note.findMany({
       where: { id: { not: noteId } },
-      select: { id: true, title: true },
+      select: { id: true, title: true, slug: true },
     });
   }
 
@@ -42,8 +43,12 @@ export async function processBacklinks(
   
   for (const match of matches) {
     const linkedTitle = match[1];
+    const linkedSlug = linkedTitle.toLowerCase().replace(/\s+/g, '-');
+    
+    // Ищем по title ИЛИ по slug (slug может быть на английском даже если title на русском)
     const targetNote = allNotes.find(
-      (n) => n.title.toLowerCase() === linkedTitle.toLowerCase()
+      (n) => n.title.toLowerCase() === linkedTitle.toLowerCase() 
+        || n.slug.toLowerCase() === linkedSlug
     );
 
     if (targetNote) {

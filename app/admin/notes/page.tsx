@@ -3,6 +3,7 @@ import { getMaturityEmoji, getMaturityColor } from "@/lib/utils";
 import Link from "next/link";
 import { GenerateEmbeddingsButton } from "./GenerateEmbeddingsButton";
 import { OptimizeNotesButton } from "./OptimizeNotesButton";
+import { ScanLinksButton } from "./ScanLinksButton";
 
 export default async function AdminNotesPage() {
   const notes = await prisma.note.findMany({
@@ -10,6 +11,8 @@ export default async function AdminNotesPage() {
     include: {
       author: { select: { name: true } },
       tags: true,
+      backlinks: true,
+      forwardLinks: true,
     },
   });
 
@@ -27,11 +30,22 @@ export default async function AdminNotesPage() {
     optimizedAt: note.optimizedAt?.toISOString() || null,
   }));
 
+  // Prepare notes for scan links button
+  const notesForScanLinks = notes.map(note => ({
+    id: note.id,
+    title: note.title,
+    slug: note.slug,
+  }));
+
+  // Get backlinks stats
+  const totalBacklinks = notes.reduce((sum, n) => sum + n.backlinks.length + n.forwardLinks.length, 0);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Управление заметками</h1>
         <div className="flex items-center gap-3">
+          <ScanLinksButton notes={notesForScanLinks} />
           <OptimizeNotesButton notes={notesForOptimization} />
           <GenerateEmbeddingsButton 
             total={totalNotes} 
@@ -74,6 +88,16 @@ export default async function AdminNotesPage() {
                     <span className={`text-xs ${getMaturityColor(note.maturity)}`}>
                       {note.maturity}
                     </span>
+                    {/* Backlinks status indicator */}
+                    {(note.backlinks.length + note.forwardLinks.length) > 0 ? (
+                      <span className="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400" title={`Связей: ${note.backlinks.length} входящих, ${note.forwardLinks.length} исходящих`}>
+                        🔗 {note.backlinks.length + note.forwardLinks.length}
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 rounded bg-gray-500/20 text-gray-500" title="Нет связей">
+                        🔗?
+                      </span>
+                    )}
                     {/* Embedding status indicator */}
                     {note.embedding ? (
                       <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400" title="Embedding готов">
@@ -127,7 +151,7 @@ export default async function AdminNotesPage() {
       )}
 
       <div className="mt-6 text-sm text-muted">
-        Всего заметок: {notes.length} | Опубликовано: {notes.filter(n => n.status === "PUBLIC").length} | Черновиков: {notes.filter(n => n.status === "DRAFT").length}
+        Всего заметок: {notes.length} | Опубликовано: {notes.filter(n => n.status === "PUBLIC").length} | Черновиков: {notes.filter(n => n.status === "DRAFT").length} | Связей: {totalBacklinks}
       </div>
     </div>
   );

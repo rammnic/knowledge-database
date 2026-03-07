@@ -7,6 +7,7 @@ import DOMPurify from "isomorphic-dompurify";
 
 interface MarkdownRendererProps {
   content: string;
+  noteTitles?: Record<string, string>; // Map of title -> slug for wikilinks
 }
 
 // Configure marked
@@ -130,7 +131,26 @@ async function highlightCodeBlocks(html: string): Promise<string> {
   return result;
 }
 
-export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+// Process wikilinks [[Note Title]] -> <a href="/notes/slug">Note Title</a>
+function processWikilinks(content: string, noteTitles?: Record<string, string>): string {
+  if (!noteTitles || Object.keys(noteTitles).length === 0) {
+    // Если нет мапы - просто удаляем wikilinks чтобы не показывать как текст
+    // Или можно оставить как есть - зависит от предпочтений
+    return content;
+  }
+
+  // Заменяем [[Note Title]] на ссылку
+  return content.replace(/\[\[([^\]]+)\]\]/g, (match, title) => {
+    const slug = noteTitles[title.toLowerCase()];
+    if (slug) {
+      return `<a href="/notes/${slug}" class="wikilink">${title}</a>`;
+    }
+    // Если не найден - возвращаем как есть
+    return match;
+  });
+}
+
+export function MarkdownRenderer({ content, noteTitles }: MarkdownRendererProps) {
   const [html, setHtml] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -139,8 +159,11 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
 
     async function processMarkdown() {
       try {
+        // Step 0: Process wikilinks before markdown parsing
+        const contentWithLinks = processWikilinks(content, noteTitles);
+        
         // Step 1: Parse markdown to HTML with marked
-        const rawHtml = parseMarkdownToHtml(content);
+        const rawHtml = parseMarkdownToHtml(contentWithLinks);
         
         if (cancelled) return;
         
@@ -181,7 +204,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     return () => {
       cancelled = true;
     };
-  }, [content]);
+  }, [content, noteTitles]);
 
   if (isLoading) {
     return (
