@@ -41,9 +41,10 @@ function generateSlug(text: string, idCounts: Record<string, number>): string {
 // Custom renderer to add IDs to headings
 const renderer = new marked.Renderer();
 
+// idCounts должен быть на уровне замыкания, чтобы сохраняться между вызовами
+let idCounts: Record<string, number> = {};
+
 renderer.heading = function({ text, depth }: Tokens.Heading) {
-  // Reset heading ID counter for each render to match server-side extractHeadings
-  const idCounts: Record<string, number> = {};
   const id = generateSlug(text, idCounts);
   
   return `<h${depth} id="${id}">${text}</h${depth}>`;
@@ -73,6 +74,8 @@ async function getHighlighter(): Promise<Highlighter> {
 
 // Parse markdown to HTML using marked
 function parseMarkdownToHtml(markdown: string): string {
+  // Reset ID counter before each parse to match server-side extractHeadings
+  idCounts = {};
   return marked.parse(markdown) as string;
 }
 
