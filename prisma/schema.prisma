@@ -1,0 +1,117 @@
+// ===========================================
+// Prisma Schema для Knowledge Database
+// ===========================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// Enums
+// ===========================================
+
+enum NoteStatus {
+  DRAFT
+  PUBLIC
+}
+
+enum Maturity {
+  SEED
+  SAPLING
+  EVERGREEN
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// ===========================================
+// Модели
+// ===========================================
+
+/// Пользователь системы
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(USER)
+  password  String   // Хэшированный пароль
+  notes     Note[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Заметка (статья/документ)
+model Note {
+  id          String       @id @default(cuid())
+  title       String
+  slug        String       @unique
+  content     String       // Markdown контент
+  excerpt     String?
+  status      NoteStatus   @default(DRAFT)
+  maturity    Maturity     @default(SEED)
+  embedding   String?      // JSON string with AI embedding vector
+  authorId    String
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags        NoteTag[]
+  backlinks   Backlink[]   @relation("SourceNote")
+  forwardLinks Backlink[]  @relation("TargetNote")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([maturity])
+}
+
+/// Тег для категоризации заметок
+model Tag {
+  id      String    @id @default(cuid())
+  name    String    @unique
+  slug    String    @unique
+  notes   NoteTag[]
+  createdAt DateTime @default(now())
+
+  @@index([slug])
+}
+
+/// Связь многие-ко-многим между Note и Tag
+model NoteTag {
+  noteId String
+  tagId  String
+  note   Note  @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag    Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, tagId])
+  @@index([noteId])
+  @@index([tagId])
+}
+
+/// Bi-directional links (обратные ссылки)
+model Backlink {
+  id           String   @id @default(cuid())
+  sourceNoteId String
+  targetNoteId String
+  sourceNote   Note     @relation("SourceNote", fields: [sourceNoteId], references: [id], onDelete: Cascade)
+  targetNote   Note     @relation("TargetNote", fields: [targetNoteId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([sourceNoteId, targetNoteId])
+  @@index([sourceNoteId])
+  @@index([targetNoteId])
+}
+
+/// Настройки системы
+model Settings {
+  id          String   @id @default("default")
+  siteName    String   @default("Knowledge Database")
+  siteDescription String @default("Персональная база знаний")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
