@@ -67,5 +67,5 @@ logs/
 Thumbs.db
 
 # Cline
-.clineignore
-.clinerules
+*.clineignore
+*.clinerules
