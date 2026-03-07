@@ -9,6 +9,8 @@ export async function POST(request: NextRequest) {
   
   try {
     const apiKey = process.env.OPENROUTER_API_KEY;
+    const { searchParams } = new URL(request.url);
+    const force = searchParams.get("force") === "true";
     
     if (!apiKey) {
       console.error("❌ OPENROUTER_API_KEY not configured");
@@ -18,11 +20,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get all notes without embeddings
-    const notesWithoutEmbeddings = await prisma.note.findMany({
-      where: {
-        embedding: null,
-      },
+    // Get notes - all if force=true, only without embeddings otherwise
+    const notesToProcess = await prisma.note.findMany({
+      where: force ? {} : { embedding: null },
       select: {
         id: true,
         title: true,
@@ -30,12 +30,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    console.log(`📋 Found ${notesWithoutEmbeddings.length} notes without embeddings`);
+    console.log(`📋 Found ${notesToProcess.length} notes to process (force: ${force})`);
 
-    if (notesWithoutEmbeddings.length === 0) {
-      console.log("✅ All notes already have embeddings");
+    if (notesToProcess.length === 0) {
+      console.log("✅ No notes to process");
       return NextResponse.json({ 
-        message: "All notes already have embeddings",
+        message: "No notes to process",
         processed: 0,
         success: 0,
         errors: 0
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     let successCount = 0;
     let errorCount = 0;
 
-    for (const note of notesWithoutEmbeddings) {
+    for (const note of notesToProcess) {
       try {
         const content = note.content || note.title;
         
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     console.log(`📊 Embeddings generation complete: ${successCount} success, ${errorCount} errors`);
 
     return NextResponse.json({
-      message: `Processed ${notesWithoutEmbeddings.length} notes`,
+      message: `Processed ${notesToProcess.length} notes`,
       success: successCount,
       errors: errorCount,
       results: results.slice(0, 50), // Limit response size
