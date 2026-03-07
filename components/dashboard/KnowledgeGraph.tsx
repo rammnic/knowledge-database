@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Maximize2, Minimize2 } from "lucide-react";
+import { Maximize2, Minimize2, Settings, RotateCcw, Play, X } from "lucide-react";
 
 // Динамический импорт для избежания SSR проблем с canvas
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -49,6 +49,17 @@ interface TooltipData {
   links: { target: string; type: string; weight: number; similarity?: number }[];
 }
 
+// Default simulation parameters
+const defaultParams = {
+  linkStrength: 0.5,
+  chargeStrength: -100,
+  linkDistance: 60,
+  centerStrength: 0.3,
+  linkCurvature: 0.2,
+  nodeRelSize: 6,
+  velocityDecay: 0.3,
+};
+
 export function KnowledgeGraph() {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,6 +86,20 @@ export function KnowledgeGraph() {
   
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Settings panel state
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // Simulation parameters
+  const [simParams, setSimParams] = useState({
+    linkStrength: 0.5,
+    chargeStrength: -100,
+    linkDistance: 60,
+    centerStrength: 0.3,
+    linkCurvature: 0.2,
+    nodeRelSize: 6,
+    velocityDecay: 0.3,
+  });
   
   // Flag to prevent resize handler from interfering with fullscreen transitions
   const isTransitioning = useRef(false);
@@ -332,6 +357,59 @@ export function KnowledgeGraph() {
     setSimilarityThreshold(parseFloat(e.target.value));
   };
 
+  // Handle simulation parameter changes
+  const handleParamChange = (param: string, value: number) => {
+    setSimParams((prev) => ({ ...prev, [param]: value }));
+  };
+
+  // Apply simulation parameters to graph
+  const applySimulationParams = useCallback(() => {
+    if (!graphRef.current) return;
+    
+    // Apply D3 forces
+    const linkForce = graphRef.current.d3Force('link');
+    if (linkForce) {
+      linkForce.strength(simParams.linkStrength);
+      linkForce.distance(simParams.linkDistance);
+    }
+    
+    const chargeForce = graphRef.current.d3Force('charge');
+    if (chargeForce) {
+      chargeForce.strength(simParams.chargeStrength);
+    }
+    
+    const centerForce = graphRef.current.d3Force('center');
+    if (centerForce) {
+      centerForce.strength(simParams.centerStrength);
+    }
+    
+    // Reheat simulation to apply changes
+    graphRef.current.d3ReheatSimulation();
+  }, [simParams]);
+
+  // Reset parameters to defaults
+  const resetParams = useCallback(() => {
+    setSimParams(defaultParams);
+    // Apply default params after a small delay to ensure state is updated
+    setTimeout(() => {
+      if (!graphRef.current) return;
+      const linkForce = graphRef.current.d3Force('link');
+      if (linkForce) {
+        linkForce.strength(defaultParams.linkStrength);
+        linkForce.distance(defaultParams.linkDistance);
+      }
+      const chargeForce = graphRef.current.d3Force('charge');
+      if (chargeForce) {
+        chargeForce.strength(defaultParams.chargeStrength);
+      }
+      const centerForce = graphRef.current.d3Force('center');
+      if (centerForce) {
+        centerForce.strength(defaultParams.centerStrength);
+      }
+      graphRef.current.d3ReheatSimulation();
+    }, 50);
+  }, []);
+
   if (!filteredData || filteredData.nodes.length === 0) {
     return (
       <div
@@ -366,6 +444,19 @@ export function KnowledgeGraph() {
 
       {/* Filters */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 items-end">
+        {/* Settings button */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className={`p-2 rounded-lg transition-colors ${
+            showSettings 
+              ? "bg-primary/20 text-primary border border-primary/50" 
+              : "bg-surface/80 hover:bg-surface text-muted"
+          }`}
+          title="Настройки графа"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+        
         {/* Fullscreen button */}
         <button
           onClick={toggleFullscreen}
@@ -413,6 +504,160 @@ export function KnowledgeGraph() {
           </button>
         </div>
       </div>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="absolute top-20 right-4 z-30 w-72 bg-surface/95 backdrop-blur-md border border-border rounded-xl p-4 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-semibold text-sm">Параметры графа</h4>
+            <button
+              onClick={() => setShowSettings(false)}
+              className="p-1 hover:bg-surface rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4 text-muted" />
+            </button>
+          </div>
+          
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+            {/* Link Strength */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Сила связей</span>
+                <span className="text-primary font-mono">{simParams.linkStrength.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="1.5"
+                step="0.05"
+                value={simParams.linkStrength}
+                onChange={(e) => handleParamChange('linkStrength', parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+
+            {/* Charge Strength */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Отталкивание узлов</span>
+                <span className="text-primary font-mono">{simParams.chargeStrength}</span>
+              </div>
+              <input
+                type="range"
+                min="-300"
+                max="-30"
+                step="10"
+                value={simParams.chargeStrength}
+                onChange={(e) => handleParamChange('chargeStrength', parseInt(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+
+            {/* Link Distance */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Длина связей</span>
+                <span className="text-primary font-mono">{simParams.linkDistance}</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="150"
+                step="5"
+                value={simParams.linkDistance}
+                onChange={(e) => handleParamChange('linkDistance', parseInt(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+
+            {/* Center Strength */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Притяжение к центру</span>
+                <span className="text-primary font-mono">{simParams.centerStrength.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="1.0"
+                step="0.05"
+                value={simParams.centerStrength}
+                onChange={(e) => handleParamChange('centerStrength', parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+
+            {/* Link Curvature */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Кривизна линий</span>
+                <span className="text-primary font-mono">{simParams.linkCurvature.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="0.4"
+                step="0.02"
+                value={simParams.linkCurvature}
+                onChange={(e) => handleParamChange('linkCurvature', parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+
+            {/* Node Size */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Размер узлов</span>
+                <span className="text-primary font-mono">{simParams.nodeRelSize}</span>
+              </div>
+              <input
+                type="range"
+                min="3"
+                max="10"
+                step="0.5"
+                value={simParams.nodeRelSize}
+                onChange={(e) => handleParamChange('nodeRelSize', parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+
+            {/* Velocity Decay */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted">Трение</span>
+                <span className="text-primary font-mono">{simParams.velocityDecay.toFixed(2)}</span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="0.6"
+                step="0.02"
+                value={simParams.velocityDecay}
+                onChange={(e) => handleParamChange('velocityDecay', parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2 mt-4 pt-3 border-t border-border">
+            <button
+              onClick={applySimulationParams}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-primary/20 hover:bg-primary/30 text-primary rounded-lg text-xs font-medium transition-colors"
+            >
+              <Play className="w-3 h-3" />
+              Применить
+            </button>
+            <button
+              onClick={resetParams}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-surface hover:bg-background text-muted rounded-lg text-xs font-medium transition-colors"
+            >
+              <RotateCcw className="w-3 h-3" />
+              Сбросить
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Legend / Link Type Filters */}
       <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1">
@@ -492,7 +737,7 @@ export function KnowledgeGraph() {
           nodeLabel={(node: any) => `${node.name} (${node.maturity})`}
           nodeColor={(node: any) => getNodeColor(node.maturity, hoveredNode === node.id)}
           nodeVal="val"
-          nodeRelSize={6}
+          nodeRelSize={simParams.nodeRelSize}
           linkColor={(link: any) => {
             const isHighlighted =
               hoveredNode === link.source || hoveredNode === link.target;
@@ -511,14 +756,14 @@ export function KnowledgeGraph() {
           }}
           linkDirectionalArrowLength={3}
           linkDirectionalArrowRelPos={1}
-          linkCurvature={0.2}
+          linkCurvature={simParams.linkCurvature}
           onNodeClick={handleNodeClick}
           onNodeRightClick={handleNodeRightClick}
           onNodeHover={handleNodeHover}
           backgroundColor="rgba(8, 15, 30, 0.6)"
           cooldownTicks={100}
           d3AlphaDecay={0.02}
-          d3VelocityDecay={0.3}
+          d3VelocityDecay={simParams.velocityDecay}
           warmupTicks={50}
         />
       </div>
