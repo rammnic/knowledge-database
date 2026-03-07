@@ -176,12 +176,41 @@ export function KnowledgeGraph() {
   const filteredData = useMemo(() => {
     if (!graphData) return null;
 
-    const filteredNodes = graphData.nodes.filter((node) => {
-      const maturityMatch = maturityFilters[node.maturity];
-      const searchMatch = !searchQuery || 
-        node.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return maturityMatch && searchMatch;
-    });
+    let filteredNodes: GraphNode[];
+    const matchedNodeIds: Set<string> = new Set();
+
+    if (searchQuery) {
+      // 1. Находим прямые совпадения по названию
+      const matchingNodes = graphData.nodes.filter((node) => 
+        node.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      
+      // Сохраняем ID найденных узлов
+      matchingNodes.forEach(n => matchedNodeIds.add(n.id));
+
+      // 2. Находим связанные узлы
+      const matchingIds = new Set(matchingNodes.map(n => n.id));
+      const connectedIds = new Set<string>();
+      
+      graphData.links.forEach(link => {
+        if (matchingIds.has(link.source)) connectedIds.add(link.target);
+        if (matchingIds.has(link.target)) connectedIds.add(link.source);
+      });
+
+      // 3. Объединяем: найденные + связанные
+      const allIds = new Set([...matchingIds, ...connectedIds]);
+      
+      filteredNodes = graphData.nodes.filter((node) => {
+        const maturityMatch = maturityFilters[node.maturity];
+        const isInSearchResult = allIds.has(node.id);
+        return maturityMatch && isInSearchResult;
+      });
+    } else {
+      // Без поиска - показываем все узлы с учётом фильтров зрелости
+      filteredNodes = graphData.nodes.filter((node) => {
+        return maturityFilters[node.maturity];
+      });
+    }
 
     const nodeIds = new Set(filteredNodes.map((n) => n.id));
     const filteredLinks = graphData.links.filter(
@@ -191,24 +220,35 @@ export function KnowledgeGraph() {
         linkTypeFilters[link.type]
     );
 
-    return { nodes: filteredNodes, links: filteredLinks };
+    return { nodes: filteredNodes, links: filteredLinks, matchedNodeIds };
   }, [graphData, maturityFilters, linkTypeFilters, searchQuery]);
 
   // Deep clone filtered data to force graph to re-render properly
   const graphDataForRender = useMemo(() => {
-    if (!filteredData) return null;
+    if (!filteredData) return { nodes: [], links: [] };
     return JSON.parse(JSON.stringify(filteredData));
   }, [filteredData]);
 
-  const getNodeColor = useCallback((maturity: string, isHovered: boolean) => {
+  // Определяем, есть ли найденные узлы при поиске (до использования в getNodeColor)
+  const hasSearchResults = searchQuery && filteredData?.matchedNodeIds && filteredData.matchedNodeIds.size > 0;
+  const isEmptyGraph = !filteredData || filteredData.nodes.length === 0;
+  const isSearchNotFound = searchQuery && !hasSearchResults && filteredData?.nodes.length === 0;
+
+  const getNodeColor = useCallback((maturity: string, isHovered: boolean, nodeId?: string) => {
     const colors: Record<string, string> = {
       SEED: "#22c55e",
       SAPLING: "#84cc16",
       EVERGREEN: "#0891b2",
     };
-    const color = colors[maturity] || "#6b7280";
+    let color = colors[maturity] || "#6b7280";
+    
+    // Подсветка найденных при поиске узлов
+    if (hasSearchResults && nodeId && filteredData?.matchedNodeIds?.has(nodeId)) {
+      color = "#fbbf24"; // Янтарный цвет для найденных узлов
+    }
+    
     return isHovered ? color : color + "cc";
-  }, []);
+  }, [hasSearchResults, filteredData]);
 
   const getLinkColor = useCallback((type: string) => {
     switch (type) {
@@ -409,19 +449,6 @@ export function KnowledgeGraph() {
       graphRef.current.d3ReheatSimulation();
     }, 50);
   }, []);
-
-  if (!filteredData || filteredData.nodes.length === 0) {
-    return (
-      <div
-        ref={containerRef}
-        className="glass rounded-2xl p-4 h-full min-h-[400px] relative overflow-hidden"
-      >
-        <div className="flex items-center justify-center h-full text-muted">
-          <p>Нет данных для отображения графа</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -723,7 +750,7 @@ export function KnowledgeGraph() {
 
       {/* Stats */}
       <div className="absolute bottom-4 right-4 z-10 text-xs text-muted">
-        {filteredData.nodes.length} узлов • {filteredData.links.length} связей
+        {filteredData?.nodes.length || 0} узлов • {filteredData?.links.length || 0} связей
       </div>
 
       {/* Graph container */}
@@ -735,7 +762,7 @@ export function KnowledgeGraph() {
           height={dimensions.height}
           nodeId="id"
           nodeLabel={(node: any) => `${node.name} (${node.maturity})`}
-          nodeColor={(node: any) => getNodeColor(node.maturity, hoveredNode === node.id)}
+          nodeColor={(node: any) => getNodeColor(node.maturity, hoveredNode === node.id, node.id)}
           nodeVal="val"
           nodeRelSize={simParams.nodeRelSize}
           linkColor={(link: any) => {
