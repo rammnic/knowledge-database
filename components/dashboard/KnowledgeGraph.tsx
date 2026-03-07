@@ -34,6 +34,7 @@ interface GraphLink {
   target: string;
   type: "BACKLINK" | "TAG" | "AI";
   weight: number;
+  similarity?: number;
 }
 
 interface GraphData {
@@ -45,7 +46,7 @@ interface TooltipData {
   node: any;
   x: number;
   y: number;
-  links: { target: string; type: string; weight: number }[];
+  links: { target: string; type: string; weight: number; similarity?: number }[];
 }
 
 export function KnowledgeGraph() {
@@ -64,7 +65,13 @@ export function KnowledgeGraph() {
     SAPLING: true,
     EVERGREEN: true,
   });
+  const [linkTypeFilters, setLinkTypeFilters] = useState({
+    BACKLINK: true,
+    TAG: true,
+    AI: true,
+  });
   const [searchQuery, setSearchQuery] = useState("");
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.5);
   
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -79,7 +86,7 @@ export function KnowledgeGraph() {
   useEffect(() => {
     async function fetchGraphData() {
       try {
-        const res = await fetch("/api/graph");
+        const res = await fetch(`/api/graph?similarityThreshold=${similarityThreshold}`);
         if (res.ok) {
           const data = await res.json();
           setGraphData(data);
@@ -89,7 +96,7 @@ export function KnowledgeGraph() {
       }
     }
     fetchGraphData();
-  }, []);
+  }, [similarityThreshold]);
 
   // Handle resize with ResizeObserver
   useEffect(() => {
@@ -153,11 +160,14 @@ export function KnowledgeGraph() {
 
     const nodeIds = new Set(filteredNodes.map((n) => n.id));
     const filteredLinks = graphData.links.filter(
-      (link) => nodeIds.has(link.source) && nodeIds.has(link.target)
+      (link) => 
+        nodeIds.has(link.source) && 
+        nodeIds.has(link.target) &&
+        linkTypeFilters[link.type]
     );
 
     return { nodes: filteredNodes, links: filteredLinks };
-  }, [graphData, maturityFilters, searchQuery]);
+  }, [graphData, maturityFilters, linkTypeFilters, searchQuery]);
 
   // Deep clone filtered data to force graph to re-render properly
   const graphDataForRender = useMemo(() => {
@@ -215,6 +225,7 @@ export function KnowledgeGraph() {
             target: link.source === node.id ? link.target : link.source,
             type: link.type,
             weight: link.weight,
+            similarity: link.similarity,
           }));
         
         // Получаем позицию для tooltip (приблизительно)
@@ -310,6 +321,17 @@ export function KnowledgeGraph() {
     }));
   };
 
+  const toggleLinkTypeFilter = (linkType: keyof typeof linkTypeFilters) => {
+    setLinkTypeFilters((prev) => ({
+      ...prev,
+      [linkType]: !prev[linkType],
+    }));
+  };
+
+  const handleSimilarityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSimilarityThreshold(parseFloat(e.target.value));
+  };
+
   if (!filteredData || filteredData.nodes.length === 0) {
     return (
       <div
@@ -392,16 +414,65 @@ export function KnowledgeGraph() {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 z-10 text-xs flex flex-col gap-1 bg-surface/80 backdrop-blur-sm p-2 rounded-lg">
-        <div className="flex items-center gap-2">
-          <span className="w-6 h-0.5 bg-cyan-400/60" /> <span>Backlink (ссылка)</span>
+      {/* Legend / Link Type Filters */}
+      <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-1">
+        <div className="text-xs text-muted mb-1">Типы связей:</div>
+        <div className="flex flex-col gap-1 bg-surface/80 backdrop-blur-sm p-2 rounded-lg">
+          <button
+            onClick={() => toggleLinkTypeFilter("BACKLINK")}
+            className={`flex items-center gap-2 text-xs transition-all ${
+              linkTypeFilters.BACKLINK 
+                ? "text-cyan-400" 
+                : "text-muted opacity-40 line-through"
+            }`}
+          >
+            <span className={`w-6 h-0.5 ${linkTypeFilters.BACKLINK ? "bg-cyan-400/60" : "bg-cyan-400/20"}`} />
+            <span>Backlink (ссылка)</span>
+          </button>
+          <button
+            onClick={() => toggleLinkTypeFilter("TAG")}
+            className={`flex items-center gap-2 text-xs transition-all ${
+              linkTypeFilters.TAG 
+                ? "text-green-400" 
+                : "text-muted opacity-40 line-through"
+            }`}
+          >
+            <span className={`w-6 h-0.5 border-t-2 border-dashed ${linkTypeFilters.TAG ? "border-green-400/50" : "border-green-400/20"}`} />
+            <span>Tag (общий тег)</span>
+          </button>
+          <button
+            onClick={() => toggleLinkTypeFilter("AI")}
+            className={`flex items-center gap-2 text-xs transition-all ${
+              linkTypeFilters.AI 
+                ? "text-purple-400" 
+                : "text-muted opacity-40 line-through"
+            }`}
+          >
+            <span 
+              className={`w-6 h-0.5 ${linkTypeFilters.AI ? "bg-purple-400/50" : "bg-purple-400/20"}`}
+              style={linkTypeFilters.AI ? { backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(168, 85, 247, 0.5) 2px, rgba(168, 85, 247, 0.5) 4px)' } : { backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(168, 85, 247, 0.2) 2px, rgba(168, 85, 247, 0.2) 4px)' }}
+            />
+            <span>AI (схожесть)</span>
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-6 h-0.5 border-t-2 border-dashed border-green-400/50" /> <span>Tag (общий тег)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-6 h-0.5 bg-purple-400/50" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(168, 85, 247, 0.5) 2px, rgba(168, 85, 247, 0.5) 4px)' }} /> <span>AI (схожесть)</span>
+
+        {/* AI Similarity Threshold Slider */}
+        <div className="mt-3 pt-2 border-t border-border/50">
+          <div className="text-xs text-muted mb-1">Порог AI схожести:</div>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min="0.3"
+              max="0.8"
+              step="0.05"
+              value={similarityThreshold}
+              onChange={handleSimilarityChange}
+              className="w-20 h-1.5 bg-surface rounded-lg appearance-none cursor-pointer accent-purple-400"
+            />
+            <span className="text-xs text-purple-400 font-mono w-12">
+              {similarityThreshold.toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -431,6 +502,11 @@ export function KnowledgeGraph() {
           linkWidth={(link: any) => {
             const isHighlighted =
               hoveredNode === link.source || hoveredNode === link.target;
+            // For AI links, use similarity to adjust width
+            if (link.type === "AI" && link.similarity) {
+              const baseWidth = link.similarity * 3; // Scale by similarity
+              return isHighlighted ? baseWidth + 1.5 : baseWidth * 0.7;
+            }
             return isHighlighted ? link.weight + 1 : link.weight * 0.5;
           }}
           linkDirectionalArrowLength={3}
@@ -477,6 +553,24 @@ export function KnowledgeGraph() {
           <div className="text-xs text-muted">
             {tooltip.links.length} связей
           </div>
+          {/* Show AI similarity details */}
+          {tooltip.links.filter(l => l.type === "AI").length > 0 && (
+            <div className="mt-2 pt-2 border-t border-border">
+              <div className="text-xs text-purple-400 mb-1">AI связи:</div>
+              {tooltip.links
+                .filter(l => l.type === "AI")
+                .sort((a, b) => (b.similarity || 0) - (a.similarity || 0))
+                .slice(0, 5)
+                .map((link, idx) => (
+                  <div key={idx} className="text-xs text-muted flex justify-between gap-2">
+                    <span className="truncate max-w-[120px]">{link.target}</span>
+                    <span className="text-purple-400 font-mono">
+                      {(link.similarity || 0).toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
     </div>

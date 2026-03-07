@@ -1,8 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function GET() {
+const DEFAULT_SIMILARITY_THRESHOLD = 0.5;
+
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const similarityThreshold = parseFloat(
+      searchParams.get("similarityThreshold") || String(DEFAULT_SIMILARITY_THRESHOLD)
+    );
+
+    console.log(`📊 Graph API: similarityThreshold = ${similarityThreshold}`);
+
     // Get all public notes with tags
     const notes: Array<{
       id: string;
@@ -54,6 +63,7 @@ export async function GET() {
       target: string;
       type: "BACKLINK" | "TAG" | "AI";
       weight: number;
+      similarity?: number;
     }> = [];
 
     // Add backlinks
@@ -125,19 +135,30 @@ export async function GET() {
       },
       select: {
         id: true,
+        title: true,
         embedding: true,
       },
     });
 
     // If we have embeddings, calculate AI similarity
+    const aiLinks: Array<{
+      source: string;
+      target: string;
+      similarity: number;
+      sourceTitle: string;
+      targetTitle: string;
+    }> = [];
+
     if (notesWithEmbeddings.length > 1) {
       const embeddingMap = new Map<string, number[]>();
+      const titleMap = new Map<string, string>();
       
       notesWithEmbeddings.forEach((note) => {
         if (note.embedding) {
           try {
             const embedding = JSON.parse(note.embedding);
             embeddingMap.set(note.id, embedding);
+            titleMap.set(note.id, note.title);
           } catch (e) {
             console.error("Failed to parse embedding for note:", note.id);
           }
@@ -158,8 +179,19 @@ export async function GET() {
           if (embA && embB) {
             const similarity = cosineSimilarity(embA, embB);
             
-            // Only add AI link if similarity > 0.7
-            if (similarity > 0.7) {
+            // Store all AI links for logging (debug)
+            if (similarity > 0.3) {
+              aiLinks.push({
+                source: nodeA.id,
+                target: nodeB.id,
+                similarity,
+                sourceTitle: titleMap.get(nodeA.id) || nodeA.name,
+                targetTitle: titleMap.get(nodeB.id) || nodeB.name,
+              });
+            }
+            
+            // Only add AI link if similarity > threshold
+            if (similarity > similarityThreshold) {
               const key = `${nodeA.id}-${nodeB.id}`;
               const reverseKey = `${nodeB.id}-${nodeA.id}`;
               
@@ -170,6 +202,7 @@ export async function GET() {
                   target: nodeB.id,
                   type: "AI",
                   weight: Math.round(similarity * 5), // Scale to 1-5
+                  similarity: Math.round(similarity * 100) / 100, // Round to 2 decimal places
                 });
                 
                 nodeA.val += 0.2;
@@ -178,6 +211,16 @@ export async function GET() {
             }
           }
         }
+      }
+
+      // Log top similarity pairs for debugging
+      if (aiLinks.length > 0) {
+        const sortedLinks = aiLinks.sort((a, b) => b.similarity - a.similarity);
+        console.log(`🔍 Top ${Math.min(10, sortedLinks.length)} AI similarity pairs:`);
+        sortedLinks.slice(0, 10).forEach((link, idx) => {
+          console.log(`   ${idx + 1}. ${link.sourceTitle} ↔ ${link.targetTitle}: ${link.similarity.toFixed(3)}`);
+        });
+        console.log(`   Threshold: ${similarityThreshold}, Links created: ${links.filter(l => l.type === "AI").length}`);
       }
     }
 
