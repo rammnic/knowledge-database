@@ -148,7 +148,120 @@ knowledge-database/
 ├── docker-compose.yml    # Orchestration
 ├── Dockerfile            # Multi-stage build
 ├── .env.example          # Шаблон переменных
-└── ...
+├── nginx/                # Nginx конфиги
+│   └── smart.rammnic.space
+└── .github/
+    └── workflows/
+        └── deploy.yml    # CI/CD
+```
+
+## Первичная настройка сервера
+
+### 1. Клонирование репозитория
+```bash
+mkdir -p /opt/knowledge-database
+cd /opt/knowledge-database
+git clone https://github.com/rammnic/knowledge-database.git .
+```
+
+### 2. Настройка переменных окружения
+```bash
+cp .env.example .env
+nano .env
+# Заполнить:
+# DB_PASSWORD=your-secure-password
+# SECRET_TOKEN=your-admin-secret-token
+# OPENROUTER_API_KEY=sk-or-v1-...
+```
+
+### 3. Настройка Nginx
+```bash
+# Скопировать конфиг
+sudo cp nginx/smart.rammnic.space /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/smart.rammnic.space /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Получить SSL сертификат
+sudo certbot --nginx -d smart.rammnic.space
+```
+
+### 4. Запуск контейнеров
+```bash
+docker-compose up -d
+docker-compose ps
+```
+
+### 5. Проверка
+```bash
+curl http://127.0.0.1:3002/api/health
+```
+
+---
+
+## Настройка GitHub Secrets
+
+В репозитории GitHub добавить Secrets:
+
+| Секрет | Описание | Пример |
+|--------|----------|--------|
+| `DOCKER_USERNAME` | Docker Hub username | `rammnic1` |
+| `DOCKER_PASSWORD` | Docker Hub password/token | `***` |
+| `DEPLOY_HOST` | IP сервера | `159.681.xx.xx` |
+| `DEPLOY_USER` | SSH пользователь | `root` |
+| `SSH_PRIVATE_KEY` | Приватный SSH ключ | `-----BEGIN OPENSSH...` |
+| `DB_PASSWORD` | Пароль PostgreSQL | `secure-password` |
+| `SECRET_TOKEN` | Токен админки | `your-secret-token` |
+| `OPENROUTER_API_KEY` | API ключ OpenRouter | `sk-or-v1-...` |
+| `OPENROUTER_MODEL` | Модель AI | `minimax/minimax-m2.5` |
+| `OPENROUTER_PROVIDER_ORDER` | Провайдеры | `sambanova,fireworks` |
+| `OPENROUTER_CONCURRENCY` | Параллельные запросы | `10` |
+| `NEXT_PUBLIC_URL` | URL приложения | `https://smart.rammnic.space` |
+
+### Генерация SSH ключа для GitHub Actions
+```bash
+ssh-keygen -t ed25519 -C "github-actions" -f deploy_key
+# Публичный ключ добавить в ~/.authorized_keys на сервере
+# Приватный ключ добавить в GitHub Secrets как SSH_PRIVATE_KEY
+```
+
+## Первичная настройка сервера
+
+### 1. Клонирование и настройка
+```bash
+mkdir -p /opt/knowledge-database
+cd /opt/knowledge-database
+git clone https://github.com/rammnic/knowledge-database.git .
+
+# Создать .env файл (все переменные передаются из GitHub Secrets)
+# CI/CD создаст .env автоматически при первом деплое
+```
+
+### 2. Nginx
+```bash
+# Скопировать конфиг
+sudo cp nginx/smart.rammnic.space /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/smart.rammnic.space /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# Получить SSL сертификат
+sudo certbot --nginx -d smart.rammnic.space
+```
+
+### 3. Первый деплой
+После настройки GitHub Secrets — запушить в main, CI/CD запустится автоматически.
+
+### 4. Проверка
+```bash
+# Проверить контейнеры
+docker-compose ps
+
+# Проверить здоровье
+curl http://127.0.0.1:3002/api/health
+
+# Логи
+docker-compose logs -f knowledge-app
 ```
 
 ## Безопасность

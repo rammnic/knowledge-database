@@ -32,12 +32,16 @@ services:
       dockerfile: Dockerfile
     container_name: knowledge-app
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3002:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://knowledge:${DB_PASSWORD}@knowledge-db:5432/knowledge
       - SECRET_TOKEN=${SECRET_TOKEN}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-minimax/minimax-m2.5}
+      - OPENROUTER_PROVIDER_ORDER=${OPENROUTER_PROVIDER_ORDER:-sambanova,fireworks}
+      - OPENROUTER_CONCURRENCY=${OPENROUTER_CONCURRENCY:-10}
+      - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL:-https://smart.rammnic.space}
     restart: unless-stopped
     depends_on:
       knowledge-db:
