@@ -1,6 +1,15 @@
+// Helper для логирования с timestamp
+const log = (tag: string, message: string) => {
+  console.log(`[${new Date().toISOString()}] [${tag}] ${message}`);
+};
+
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { processBacklinks } from "@/lib/backlinks";
+import { initializeJSONWorkerPool, getJSONWorkerPool } from "@/lib/json-worker-pool";
+
+// Глобальная переменная для пула воркеров
+let jsonWorkerPool: ReturnType<typeof getJSONWorkerPool> | null = null;
 
 // SSE streaming для отправки прогресса
 export async function POST(request: NextRequest) {
@@ -59,10 +68,25 @@ export async function POST(request: NextRequest) {
         });
         notes.forEach(note => notesMap.set(note.id, note));
 
+        // Инициализируем пул воркеров для JSON парсинга (если ещё не инициализирован)
+        // С fallback на синхронный парсинг, если worker pool не работает
+        if (!jsonWorkerPool) {
+          try {
+            const poolSize = parseInt(process.env.JSON_WORKER_POOL_SIZE || "4", 10);
+            jsonWorkerPool = await initializeJSONWorkerPool(poolSize);
+            log("PHASE 1", `JSON Worker Pool initialized with ${poolSize} workers`);
+          } catch (workerError) {
+            console.warn('[PHASE 1] Worker pool initialization failed, using sync parsing:', workerError);
+            jsonWorkerPool = null; // Will use sync fallback
+          }
+        }
+        
         // Отправляем начальный статус
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ type: "start", total: noteIds.length })}\n\n`)
         );
+        
+        log("PHASE 1", "Data preloading completed");
 
         // Фаза 2: AI оптимизация - полностью параллельно
         
@@ -78,17 +102,48 @@ export async function POST(request: NextRequest) {
           const note = notesMap.get(noteId);
           
           if (!note) {
+            // Отправляем событие об ошибке
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  type: "ai-error",
+                  index,
+                  id: noteId,
+                  title: "Unknown",
+                  error: "Note not found"
+                })}\n\n`
+              )
+            );
             return { noteId, index, title: '', content: '', tags: [], error: 'Note not found' };
           }
 
+          // Отправляем событие о начале AI обработки
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "ai-start",
+                index,
+                id: noteId,
+                title: note.title,
+              })}\n\n`
+            )
+          );
+
           const aiStartTime = Date.now();
+          log("OPTIMIZE", `START request for "${note.title}" (index: ${index})`);
 
           // Call OpenRouter API for optimization with timeout
           const abortController = new AbortController();
           const timeoutId = setTimeout(() => {
             abortController.abort();
-            console.error(`[OPTIMIZE] Timeout for note ${noteId}`);
+            log("OPTIMIZE", `Timeout for note ${noteId}`);
           }, 120000); // 2 min timeout
+
+          // Get provider order from env or use default
+          const providerOrder = (process.env.OPENROUTER_PROVIDER_ORDER || "sambanova,fireworks")
+            .split(',')
+            .map(p => p.trim())
+            .filter(p => p);
 
           let response;
           try {
@@ -102,6 +157,9 @@ export async function POST(request: NextRequest) {
               },
               body: JSON.stringify({
                 model: process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp",
+                provider: {
+                  order: providerOrder,
+                },
                 messages: [
                   {
                     role: "system",
@@ -135,18 +193,55 @@ IMPORTANT: Return in this exact format:
             clearTimeout(timeoutId);
           }
 
-          const aiTime = Date.now() - aiStartTime;
-          console.log(`[OPTIMIZE] AI request for "${note.title}" completed in ${aiTime}ms`);
+          const responseTime = Date.now() - aiStartTime;
+          log("OPTIMIZE", `RESPONSE received for "${note.title}" in ${responseTime}ms`);
 
           if (!response.ok) {
+            // Отправляем событие об ошибке AI
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  type: "ai-error",
+                  index,
+                  id: noteId,
+                  title: note.title,
+                  error: `OpenRouter API error: ${response.status}`
+                })}\n\n`
+              )
+            );
             throw new Error(`OpenRouter API error: ${response.status}`);
           }
 
           const data = await response.json();
           const rawContent = data.choices[0].message.content;
           
-          // Парсим ответ с разделителями
-          const result = parseOptimizeResponse(rawContent);
+          // Парсим ответ с разделителями (используем worker pool для JSON)
+          // С fallback на синхронный парсинг при ошибке worker'а
+          const parseStartTime = Date.now();
+          let result: { content: string; tags: string[] };
+          try {
+            result = jsonWorkerPool 
+              ? await parseOptimizeResponse(rawContent, jsonWorkerPool)
+              : parseOptimizeResponseSync(rawContent);
+          } catch (parseError) {
+            console.warn(`[PARSE] Worker pool failed for "${note.title}", using sync fallback:`, parseError);
+            result = parseOptimizeResponseSync(rawContent);
+          }
+          const parseTime = Date.now() - parseStartTime;
+          log("OPTIMIZE", `PARSED for "${note.title}" in ${parseTime}ms`);
+
+          // Отправляем событие о завершении AI обработки
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({
+                type: "ai-complete",
+                index,
+                id: noteId,
+                title: note.title,
+                duration: responseTime,
+              })}\n\n`
+            )
+          );
 
           return {
             noteId,
@@ -157,19 +252,36 @@ IMPORTANT: Return in this exact format:
           };
         };
 
-        // Запускаем все AI запросы параллельно
-        console.log(`[PHASE 2] Starting ${noteIds.length} AI requests in parallel at: ${new Date().toISOString()}`);
+        // Concurrency limiting - запускаем запросы пачками
+        const concurrency = parseInt(process.env.OPENROUTER_CONCURRENCY || "5", 10);
+        log("PHASE 2", `Starting ${noteIds.length} AI requests with concurrency ${concurrency}`);
+
+        const aiResults: Array<PromiseSettledResult<{
+          noteId: string;
+          index: number;
+          title: string;
+          content: string;
+          tags: string[];
+          error?: string;
+        }>> = [];
+
+        // Process in batches
+        for (let i = 0; i < noteIds.length; i += concurrency) {
+          const batch = noteIds.slice(i, i + concurrency);
+          const batchPromises = batch.map((noteId: string, batchIndex: number) => 
+            callAI(noteId, i + batchIndex)
+          );
+          
+          const batchResults = await Promise.allSettled(batchPromises);
+          aiResults.push(...batchResults);
+          
+          log("PHASE 2", `Batch ${Math.floor(i / concurrency) + 1} completed (${Math.min(i + concurrency, noteIds.length)}/${noteIds.length})`);
+        }
         
-        const aiPromises = noteIds.map((noteId: string, index: number) =>
-          callAI(noteId, index)
-        );
-        
-        const aiResults = await Promise.allSettled(aiPromises);
-        
-        console.log(`[PHASE 2] All AI requests completed at: ${new Date().toISOString()}`);
+        log("PHASE 2", "All AI requests completed");
 
         // Фаза 3: Последовательная запись в DB (без конкуренции)
-        console.log(`[PHASE 3] Starting DB writes at: ${new Date().toISOString()}`);
+        log("PHASE 3", "Starting DB writes");
         
         for (const result of aiResults) {
           if (result.status === 'rejected') {
@@ -179,11 +291,11 @@ IMPORTANT: Return in this exact format:
 
           const { noteId, index, title, content, tags, error } = result.value;
 
-          // Отправляем статус "обработка" перед DB записью
+          // Отправляем статус "сохранение" перед DB записью
           controller.enqueue(
             encoder.encode(
               `data: ${JSON.stringify({
-                type: "processing",
+                type: "saving",
                 index,
                 id: noteId,
                 title,
@@ -263,7 +375,7 @@ IMPORTANT: Return in this exact format:
             }, { timeout: 30000 });
 
             const dbWriteTime = Date.now() - dbWriteStart;
-            console.log(`[OPTIMIZE] DB write for "${title}" completed in ${dbWriteTime}ms`);
+            log("OPTIMIZE", `DB write for "${title}" completed in ${dbWriteTime}ms`);
 
             results.success++;
             
@@ -274,12 +386,13 @@ IMPORTANT: Return in this exact format:
                   index,
                   id: noteId,
                   title,
+                  duration: dbWriteTime,
                 })}\n\n`
               )
             );
 
           } catch (error) {
-            console.error(`Error saving note ${noteId}:`, error);
+            log("ERROR", `Error saving note ${noteId}: ${error}`);
             results.errors++;
             controller.enqueue(
               encoder.encode(
@@ -294,7 +407,8 @@ IMPORTANT: Return in this exact format:
           }
         }
 
-        // Отправляем финальный результат
+        // Отправляем финальный результат с summary
+        log("SUMMARY", `Completed: ${results.success} success, ${results.errors} errors`);
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ type: "done", ...results })}\n\n`)
         );
@@ -321,7 +435,46 @@ IMPORTANT: Return in this exact format:
 }
 
 // Парсит ответ AI с разделителями ---CONTENT--- и ---TAGS---
-function parseOptimizeResponse(text: string): { content: string; tags: string[] } {
+// Использует worker pool для асинхронного парсинга JSON тегов
+async function parseOptimizeResponse(
+  text: string, 
+  pool: ReturnType<typeof getJSONWorkerPool>
+): Promise<{ content: string; tags: string[] }> {
+  // Вариант 1: Оба разделителя ---CONTENT--- и ---TAGS---
+  const fullMatch = text.match(/---CONTENT---\n([\s\S]*?)\n---TAGS---/);
+  if (fullMatch) {
+    const tagsMatch = text.match(/---TAGS---\n(\[[\s\S]*?\])/);
+    let tags: string[] = [];
+    if (tagsMatch) {
+      // Используем worker pool для парсинга JSON
+      tags = await pool.parseJSON(tagsMatch[1]);
+    }
+    return {
+      content: fullMatch[1].trim(),
+      tags
+    };
+  }
+  
+  // Вариант 2: Только ---TAGS--- в конце (AI может пропустить ---CONTENT---)
+  const tagsOnlyMatch = text.match(/([\s\S]*?)\n---TAGS---\n(\[[\s\S]*?\])/);
+  if (tagsOnlyMatch) {
+    // Используем worker pool для парсинга JSON
+    const tags = await pool.parseJSON(tagsOnlyMatch[2]);
+    return {
+      content: tagsOnlyMatch[1].trim(),
+      tags
+    };
+  }
+  
+  // Fallback: если формат не найден, возвращаем весь текст как контент
+  return {
+    content: text.trim(),
+    tags: []
+  };
+}
+
+// Синхронный fallback парсер (если worker pool недоступен)
+function parseOptimizeResponseSync(text: string): { content: string; tags: string[] } {
   // Вариант 1: Оба разделителя ---CONTENT--- и ---TAGS---
   const fullMatch = text.match(/---CONTENT---\n([\s\S]*?)\n---TAGS---/);
   if (fullMatch) {
@@ -332,7 +485,7 @@ function parseOptimizeResponse(text: string): { content: string; tags: string[] 
     };
   }
   
-  // Вариант 2: Только ---TAGS--- в конце (AI может пропустить ---CONTENT---)
+  // Вариант 2: Только ---TAGS--- в конце
   const tagsOnlyMatch = text.match(/([\s\S]*?)\n---TAGS---\n(\[[\s\S]*?\])/);
   if (tagsOnlyMatch) {
     return {
@@ -341,7 +494,7 @@ function parseOptimizeResponse(text: string): { content: string; tags: string[] 
     };
   }
   
-  // Fallback: если формат не найден, возвращаем весь текст как контент
+  // Fallback
   return {
     content: text.trim(),
     tags: []

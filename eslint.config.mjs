@@ -5,7 +5,7 @@ import nextPlugin from "eslint-config-next";
 
 const eslintConfig = [
   {
-    ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**"],
+    ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**", "lib/json-worker.js"],
   },
   ...nextPlugin,
   ...tseslint.configs.recommended,

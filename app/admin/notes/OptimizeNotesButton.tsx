@@ -18,8 +18,11 @@ interface OptimizeNotesButtonProps {
 
 type ProgressEvent = 
   | { type: "start"; total: number }
-  | { type: "processing"; index: number; id: string; title: string }
-  | { type: "success"; index: number; id: string; title: string }
+  | { type: "ai-start"; index: number; id: string; title: string }
+  | { type: "ai-complete"; index: number; id: string; title: string; duration: number }
+  | { type: "ai-error"; index: number; id: string; title: string; error: string }
+  | { type: "saving"; index: number; id: string; title: string }
+  | { type: "success"; index: number; id: string; title: string; duration: number }
   | { type: "error"; index: number; id: string; error: string }
   | { type: "done"; success: number; errors: number };
 
@@ -27,7 +30,13 @@ export function OptimizeNotesButton({ notes }: OptimizeNotesButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [isOptimizing, setIsOptimizing] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number; currentTitle: string } | null>(null);
+  const [progress, setProgress] = useState<{ 
+    current: number; 
+    total: number; 
+    currentTitle: string;
+    phase: 'ai' | 'saving' | 'done';
+    aiCompleted: number;
+  } | null>(null);
   const [result, setResult] = useState<{ success: number; errors: number } | null>(null);
   const [skipOptimized, setSkipOptimized] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -70,7 +79,7 @@ export function OptimizeNotesButton({ notes }: OptimizeNotesButtonProps) {
     if (selectedNotes.size === 0) return;
 
     setIsOptimizing(true);
-    setProgress({ current: 0, total: selectedNotes.size, currentTitle: "" });
+    setProgress({ current: 0, total: selectedNotes.size, currentTitle: "", phase: 'ai', aiCompleted: 0 });
     setResult(null);
     
     // Создаём AbortController для возможности отмены
@@ -122,20 +131,49 @@ export function OptimizeNotesButton({ notes }: OptimizeNotesButtonProps) {
               
               switch (event.type) {
                 case "start":
-                  setProgress({ current: 0, total: event.total, currentTitle: "Начало..." });
+                  setProgress({ current: 0, total: event.total, currentTitle: "Подготовка...", phase: 'ai', aiCompleted: 0 });
                   break;
                   
-                case "processing":
+                case "ai-start":
+                  setProgress((prev) => prev ? { 
+                    ...prev, 
+                    currentTitle: `AI: ${event.title}`,
+                    phase: 'ai'
+                  } : null);
+                  break;
+                  
+                case "ai-complete":
+                  setProgress((prev) => prev ? { 
+                    ...prev, 
+                    aiCompleted: prev.aiCompleted + 1,
+                    currentTitle: `AI: ${event.title} (${event.duration}ms)`
+                  } : null);
+                  break;
+                  
+                case "ai-error":
+                  setProgress((prev) => prev ? { 
+                    ...prev, 
+                    currentTitle: `Ошибка AI: ${event.title}`,
+                    phase: 'ai'
+                  } : null);
+                  break;
+                  
+                case "saving":
                   setProgress({ 
                     current: event.index + 1, 
                     total: selectedNotes.size,
-                    currentTitle: event.title 
+                    currentTitle: `Сохранение: ${event.title}`,
+                    phase: 'saving',
+                    aiCompleted: selectedNotes.size
                   });
                   break;
                   
                 case "success":
+                  // Progress already updated in saving
+                  break;
+                  
                 case "error":
-                  // Уже обновили на processing
+                  // Progress already updated in saving
                   break;
                   
                 case "done":
@@ -289,10 +327,12 @@ export function OptimizeNotesButton({ notes }: OptimizeNotesButtonProps) {
 
       {/* Progress indicator */}
       {progress && (
-        <div className="absolute top-full right-0 mt-2 w-72 bg-surface border border-border rounded-xl p-4 z-50">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-surface border border-border rounded-xl p-4 z-50">
           <div className="flex items-center gap-2 mb-2">
             <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-            <span className="text-sm">Оптимизация...</span>
+            <span className="text-sm">
+              {progress.phase === 'ai' ? 'AI обработка...' : 'Сохранение...'}
+            </span>
             <button
               onClick={handleCancel}
               className="ml-auto text-xs text-red-400 hover:text-red-300"
@@ -300,14 +340,44 @@ export function OptimizeNotesButton({ notes }: OptimizeNotesButtonProps) {
               Отмена
             </button>
           </div>
+          
+          {/* Phase indicator */}
+          <div className="flex gap-1 mb-3">
+            <div className={`flex-1 h-1 rounded ${progress.aiCompleted > 0 ? 'bg-green-500' : 'bg-surface-hover'}`} />
+            <div className={`flex-1 h-1 rounded ${progress.phase === 'saving' ? 'bg-amber-500' : 'bg-surface-hover'}`} />
+            <div className={`flex-1 h-1 rounded ${progress.phase === 'done' ? 'bg-green-500' : 'bg-surface-hover'}`} />
+          </div>
+          
+          {/* AI progress bar */}
+          {progress.phase === 'ai' && (
+            <div className="mb-2">
+              <div className="flex justify-between text-xs text-muted mb-1">
+                <span>AI</span>
+                <span>{progress.aiCompleted} / {progress.total}</span>
+              </div>
+              <div className="w-full bg-surface-hover rounded-full h-1.5">
+                <div
+                  className="bg-green-500 h-1.5 rounded-full transition-all"
+                  style={{ width: `${(progress.aiCompleted / progress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* DB progress bar */}
           <div className="w-full bg-surface-hover rounded-full h-2">
             <div
-              className="bg-amber-400 h-2 rounded-full transition-all"
+              className={`h-2 rounded-full transition-all ${
+                progress.phase === 'saving' ? 'bg-amber-400' : 'bg-green-500'
+              }`}
               style={{ width: `${(progress.current / progress.total) * 100}%` }}
             />
           </div>
           <p className="text-xs text-muted mt-2">
-            {progress.current} / {progress.total}
+            {progress.phase === 'ai' 
+              ? `AI обработано: ${progress.aiCompleted}/${progress.total}`
+              : `Сохранено: ${progress.current}/${progress.total}`
+            }
           </p>
           {progress.currentTitle && (
             <p className="text-xs text-primary-light mt-1 truncate" title={progress.currentTitle}>
