@@ -15,8 +15,7 @@ export default async function AdminNotesPage() {
 
   // Get embedding stats
   const totalNotes = notes.length;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const notesWithEmbeddings = notes.filter((n: any) => n.embedding !== null).length;
+  const notesWithEmbeddings = notes.filter((n) => n.embedding !== null).length;
 
   // Prepare notes for optimization button (pass minimal data)
   const notesForOptimization = notes.map(note => ({
@@ -25,6 +24,7 @@ export default async function AdminNotesPage() {
     slug: note.slug,
     maturity: note.maturity,
     updatedAt: note.updatedAt.toISOString(),
+    optimizedAt: note.optimizedAt?.toISOString() || null,
   }));
 
   return (
@@ -75,14 +75,23 @@ export default async function AdminNotesPage() {
                       {note.maturity}
                     </span>
                     {/* Embedding status indicator */}
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {(note as any).embedding ? (
+                    {note.embedding ? (
                       <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400" title="Embedding готов">
                         AI
                       </span>
                     ) : (
                       <span className="text-xs px-2 py-0.5 rounded bg-gray-500/20 text-gray-500" title="Embedding не сгенерирован">
                         AI?
+                      </span>
+                    )}
+                    {/* Optimized status indicator */}
+                    {note.optimizedAt ? (
+                      <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400" title={`Оптимизировано: ${new Date(note.optimizedAt).toLocaleDateString("ru-RU")}`}>
+                        ✓ Оптим.
+                      </span>
+                    ) : (
+                      <span className="text-xs px-2 py-0.5 rounded bg-gray-500/20 text-gray-500" title="Не оптимизировано">
+                        Оптим.?
                       </span>
                     )}
                   </div>

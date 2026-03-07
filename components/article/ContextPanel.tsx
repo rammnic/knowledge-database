@@ -90,36 +90,13 @@ export function ContextPanel({ note, backlinks, forwardLinks, tags }: ContextPan
         </div>
       )}
 
-      {/* Backlinks Card */}
+      {/* Backlinks Card - входящие ссылки от других заметок */}
       <div className="glass rounded-xl p-4">
         <h4 className="text-sm font-semibold mb-3 text-muted uppercase tracking-wider">
-          Обратные ссылки ({backlinks.length})
-        </h4>
-        {backlinks.length === 0 ? (
-          <p className="text-sm text-muted">Нет обратных ссылок</p>
-        ) : (
-          <ul className="space-y-2">
-            {backlinks.map((link) => (
-              <li key={link.id}>
-                <a
-                  href={`/notes/${link.sourceNote.slug}`}
-                  className="text-sm text-secondary hover:text-primary-light transition-colors line-clamp-1"
-                >
-                  {link.sourceNote.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Forward Links Card */}
-      <div className="glass rounded-xl p-4">
-        <h4 className="text-sm font-semibold mb-3 text-muted uppercase tracking-wider">
-          Связанные заметки ({forwardLinks.length})
+          Обратные ссылки ({forwardLinks.length})
         </h4>
         {forwardLinks.length === 0 ? (
-          <p className="text-sm text-muted">Нет связанных заметок</p>
+          <p className="text-sm text-muted">Нет обратных ссылок</p>
         ) : (
           <ul className="space-y-2">
             {forwardLinks.map((link) => (
@@ -129,6 +106,29 @@ export function ContextPanel({ note, backlinks, forwardLinks, tags }: ContextPan
                   className="text-sm text-secondary hover:text-primary-light transition-colors line-clamp-1"
                 >
                   {link.targetNote.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Forward Links Card - исходящие ссылки на другие заметки */}
+      <div className="glass rounded-xl p-4">
+        <h4 className="text-sm font-semibold mb-3 text-muted uppercase tracking-wider">
+          Связанные заметки ({backlinks.length})
+        </h4>
+        {backlinks.length === 0 ? (
+          <p className="text-sm text-muted">Нет связанных заметок</p>
+        ) : (
+          <ul className="space-y-2">
+            {backlinks.map((link) => (
+              <li key={link.id}>
+                <a
+                  href={`/notes/${link.sourceNote.slug}`}
+                  className="text-sm text-secondary hover:text-primary-light transition-colors line-clamp-1"
+                >
+                  {link.sourceNote.title}
                 </a>
               </li>
             ))}

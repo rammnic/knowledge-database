@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
   try {
     const where: any = {};
     if (status) where.status = status;
+    if (tag) {
+      where.tags = { some: { tag: { slug: tag } } };
+    }
     
     const notes = await prisma.note.findMany({
       where,

@@ -229,8 +229,10 @@ services:
 
   // Create some tags
   const tags = ["typescript", "react", "system-design", "docker", "programming"];
+  const createdTags: Record<string, string> = {};
+  
   for (const tagName of tags) {
-    await prisma.tag.upsert({
+    const tag = await prisma.tag.upsert({
       where: { slug: tagName },
       update: {},
       create: {
@@ -238,8 +240,66 @@ services:
         slug: tagName,
       },
     });
+    createdTags[tagName] = tag.id;
   }
   console.log("✅ Created tags");
+
+  // Link notes to tags
+  const noteTags = [
+    { noteSlug: "typescript-basics", tagSlug: "typescript" },
+    { noteSlug: "typescript-basics", tagSlug: "programming" },
+    { noteSlug: "react-patterns", tagSlug: "react" },
+    { noteSlug: "react-patterns", tagSlug: "programming" },
+    { noteSlug: "system-design", tagSlug: "system-design" },
+    { noteSlug: "system-design", tagSlug: "programming" },
+    { noteSlug: "docker-guide", tagSlug: "docker" },
+    { noteSlug: "docker-guide", tagSlug: "programming" },
+  ];
+
+  for (const { noteSlug, tagSlug } of noteTags) {
+    const note = await prisma.note.findUnique({ where: { slug: noteSlug } });
+    if (note && createdTags[tagSlug]) {
+      await prisma.noteTag.upsert({
+        where: {
+          noteId_tagId: { noteId: note.id, tagId: createdTags[tagSlug] },
+        },
+        update: {},
+        create: {
+          noteId: note.id,
+          tagId: createdTags[tagSlug],
+        },
+      });
+    }
+  }
+  console.log("✅ Linked notes to tags");
+
+  // Create some backlinks
+  const backlinks = [
+    { source: "typescript-basics", target: "react-patterns" },
+    { source: "react-patterns", target: "typescript-basics" },
+    { source: "system-design", target: "typescript-basics" },
+    { source: "system-design", target: "react-patterns" },
+    { source: "system-design", target: "docker-guide" },
+    { source: "docker-guide", target: "system-design" },
+  ];
+
+  for (const { source, target } of backlinks) {
+    const sourceNote = await prisma.note.findUnique({ where: { slug: source } });
+    const targetNote = await prisma.note.findUnique({ where: { slug: target } });
+    if (sourceNote && targetNote) {
+      await prisma.backlink.upsert({
+        where: {
+          sourceNoteId_targetNoteId: { sourceNoteId: sourceNote.id, targetNoteId: targetNote.id },
+        },
+        update: {},
+        create: {
+          sourceNoteId: sourceNote.id,
+          targetNoteId: targetNote.id,
+        },
+      });
+    }
+  }
+  console.log("✅ Created backlinks");
 
   console.log("🎉 Seeding complete!");
 }

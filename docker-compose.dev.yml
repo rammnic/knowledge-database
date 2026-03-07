@@ -1,0 +1,31 @@
+name: knowledge-database-dev
+
+services:
+  knowledge-db:
+    image: postgres:16-alpine
+    container_name: knowledge-db-dev
+    environment:
+      POSTGRES_USER: knowledge
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: knowledge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Оптимизация для 1GB RAM
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c effective_cache_size=384MB
+      -c work_mem=4MB
+      -c max_connections=20
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U knowledge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+    driver: local

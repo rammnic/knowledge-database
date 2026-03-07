@@ -1,11 +1,13 @@
 import tseslint from "typescript-eslint";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
+import nextPlugin from "eslint-config-next";
 
 const eslintConfig = [
   {
     ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**"],
   },
+  ...nextPlugin,
   ...tseslint.configs.recommended,
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
@@ -32,6 +34,11 @@ const eslintConfig = [
         Blob: "readonly",
         HTMLCanvasElement: "readonly",
         CanvasRenderingContext2D: "readonly",
+      },
+    },
+    settings: {
+      react: {
+        version: "19.2",
       },
     },
     rules: {

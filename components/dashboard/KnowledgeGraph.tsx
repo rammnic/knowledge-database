@@ -69,8 +69,11 @@ export function KnowledgeGraph() {
   // Fullscreen state
   const [isFullscreen, setIsFullscreen] = useState(false);
   
+  // Flag to prevent resize handler from interfering with fullscreen transitions
+  const isTransitioning = useRef(false);
+  
   // Store original dimensions for fullscreen restore
-  const originalDimensions = useRef({ width: 800, height: 500 });
+  const originalDimensions = useRef({ width: 0, height: 0 });
 
   // Fetch graph data
   useEffect(() => {
@@ -88,19 +91,53 @@ export function KnowledgeGraph() {
     fetchGraphData();
   }, []);
 
-  // Handle resize
+  // Handle resize with ResizeObserver
   useEffect(() => {
-    function handleResize() {
-      if (containerRef.current && !document.fullscreenElement) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        const newDims = { width, height: Math.max(height - 80, 300) };
+    // Skip resize handling during fullscreen transitions
+    if (isTransitioning.current) return;
+    
+    if (!containerRef.current) return;
+    
+    const updateDimensions = () => {
+      if (document.fullscreenElement) {
+        const newDims = {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        };
         setDimensions(newDims);
-        originalDimensions.current = newDims;
+      } else if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        // Canvas заполняет весь контейнер без вычитаний
+        const newDims = { 
+          width: Math.max(width, 100), 
+          height: Math.max(height, 300) 
+        };
+        setDimensions(newDims);
+        
+        // Only update originalDimensions if it's not set yet (first load)
+        if (originalDimensions.current.width === 0) {
+          originalDimensions.current = newDims;
+        }
       }
-    }
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    };
+    
+    // Initial dimension update
+    updateDimensions();
+    
+    // Use ResizeObserver for more reliable dimension tracking
+    const resizeObserver = new ResizeObserver(() => {
+      if (!isTransitioning.current) {
+        updateDimensions();
+      }
+    });
+    
+    resizeObserver.observe(containerRef.current);
+    
+    window.addEventListener("resize", updateDimensions);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", updateDimensions);
+    };
   }, []);
 
   // Фильтрация данных
@@ -207,8 +244,20 @@ export function KnowledgeGraph() {
   // Fullscreen handlers
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
+      // Сохраняем текущие размеры перед входом в fullscreen
+      if (containerRef.current && originalDimensions.current.width > 0) {
+        // Already have dimensions, use them
+      } else if (containerRef.current) {
+        const { width, height } = containerRef.current.getBoundingClientRect();
+        originalDimensions.current = { 
+          width: Math.max(width, 100), 
+          height: Math.max(height, 300) 
+        };
+      }
+      isTransitioning.current = true;
       containerRef.current?.requestFullscreen();
     } else {
+      isTransitioning.current = true;
       document.exitFullscreen();
     }
   }, []);
@@ -219,20 +268,22 @@ export function KnowledgeGraph() {
       const isFull = !!document.fullscreenElement;
       setIsFullscreen(isFull);
       
-      // After fullscreen exits, restore original dimensions
-      if (!isFull && containerRef.current) {
+      if (isFull) {
+        // При входе в fullscreen - используем размеры окна
         setTimeout(() => {
-          if (containerRef.current) {
-            const { width, height } = containerRef.current.getBoundingClientRect();
-            const newDims = { width, height: Math.max(height - 80, 300) };
-            setDimensions(newDims);
-            originalDimensions.current = newDims;
-            
-            // Force graph to resize - dimensions will update via state
-            if (graphRef.current) {
-              graphRef.current.refresh();
-            }
-          }
+          const newDims = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+          };
+          setDimensions(newDims);
+          isTransitioning.current = false;
+        }, 100);
+      } else {
+        // При выходе из fullscreen - НЕ восстанавливаем сохранённые размеры
+        // Вместо этого сбрасываем флаг isTransitioning и даём ResizeObserver пересчитать
+        setTimeout(() => {
+          isTransitioning.current = false;
+          // ResizeObserver сам пересчитает размеры при изменении контейнера
         }, 100);
       }
     };
@@ -359,40 +410,42 @@ export function KnowledgeGraph() {
         {filteredData.nodes.length} узлов • {filteredData.links.length} связей
       </div>
 
-      {/* Graph */}
-      <ForceGraph2D
-        ref={graphRef}
-        graphData={graphDataForRender}
-        width={dimensions.width}
-        height={dimensions.height}
-        nodeId="id"
-        nodeLabel={(node: any) => `${node.name} (${node.maturity})`}
-        nodeColor={(node: any) => getNodeColor(node.maturity, hoveredNode === node.id)}
-        nodeVal="val"
-        nodeRelSize={6}
-        linkColor={(link: any) => {
-          const isHighlighted =
-            hoveredNode === link.source || hoveredNode === link.target;
-          const baseColor = getLinkColor(link.type);
-          return isHighlighted ? baseColor.replace("0.5", "0.9").replace("0.6", "1") : baseColor;
-        }}
-        linkWidth={(link: any) => {
-          const isHighlighted =
-            hoveredNode === link.source || hoveredNode === link.target;
-          return isHighlighted ? link.weight + 1 : link.weight * 0.5;
-        }}
-        linkDirectionalArrowLength={3}
-        linkDirectionalArrowRelPos={1}
-        linkCurvature={0.2}
-        onNodeClick={handleNodeClick}
-        onNodeRightClick={handleNodeRightClick}
-        onNodeHover={handleNodeHover}
-        backgroundColor="rgba(0,0,0,0)"
-        cooldownTicks={100}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        warmupTicks={50}
-      />
+      {/* Graph container */}
+      <div className="absolute inset-0">
+        <ForceGraph2D
+          ref={graphRef}
+          graphData={graphDataForRender}
+          width={dimensions.width}
+          height={dimensions.height}
+          nodeId="id"
+          nodeLabel={(node: any) => `${node.name} (${node.maturity})`}
+          nodeColor={(node: any) => getNodeColor(node.maturity, hoveredNode === node.id)}
+          nodeVal="val"
+          nodeRelSize={6}
+          linkColor={(link: any) => {
+            const isHighlighted =
+              hoveredNode === link.source || hoveredNode === link.target;
+            const baseColor = getLinkColor(link.type);
+            return isHighlighted ? baseColor.replace("0.5", "0.9").replace("0.6", "1") : baseColor;
+          }}
+          linkWidth={(link: any) => {
+            const isHighlighted =
+              hoveredNode === link.source || hoveredNode === link.target;
+            return isHighlighted ? link.weight + 1 : link.weight * 0.5;
+          }}
+          linkDirectionalArrowLength={3}
+          linkDirectionalArrowRelPos={1}
+          linkCurvature={0.2}
+          onNodeClick={handleNodeClick}
+          onNodeRightClick={handleNodeRightClick}
+          onNodeHover={handleNodeHover}
+          backgroundColor="rgba(8, 15, 30, 0.6)"
+          cooldownTicks={100}
+          d3AlphaDecay={0.02}
+          d3VelocityDecay={0.3}
+          warmupTicks={50}
+        />
+      </div>
 
       {/* Tooltip */}
       {tooltip && (

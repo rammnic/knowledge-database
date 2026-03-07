@@ -93,7 +93,7 @@ function EditorPageContent() {
       const res = await fetch("/api/ai/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ id: noteId, title, content }),
       });
 
       if (res.ok) {
@@ -114,7 +114,7 @@ function EditorPageContent() {
     } finally {
       setIsOptimizing(false);
     }
-  }, [title, content]);
+  }, [noteId, title, content]);
 
   return (
     <div className="h-[calc(100vh-100px)] flex flex-col">

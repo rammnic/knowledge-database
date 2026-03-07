@@ -5,9 +5,7 @@
  * ВНИМАНИЕ: Не добавлять в prisma db seed!
  * Этот скрипт только для локальной разработки.
  */
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 const devNotes = [
   // ===========================================

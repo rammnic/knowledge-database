@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { MarkdownRenderer } from "@/components/article/MarkdownRenderer";
 import { TableOfContents } from "@/components/article/TableOfContents";
@@ -49,9 +50,9 @@ export default async function NotePage({ params }: PageProps) {
       {/* Header */}
       <header className="glass border-b border-glass-border py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/" className="text-lg font-semibold text-gradient">
+<Link href="/" className="text-lg font-semibold text-gradient">
             ← Knowledge Database
-          </a>
+          </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted">
               {note.author.name || "Автор"}

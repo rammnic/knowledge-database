@@ -2,7 +2,18 @@ import prisma from "@/lib/prisma";
 import { getMaturityEmoji, getMaturityColor } from "@/lib/utils";
 import Link from "next/link";
 
-export default async function NotesPage() {
+interface NotesPageProps {
+  searchParams: Promise<{ tag?: string }>;
+}
+
+export default async function NotesPage({ searchParams }: NotesPageProps) {
+  const { tag } = await searchParams;
+  
+  const where: any = { status: "PUBLIC" };
+  if (tag) {
+    where.tags = { some: { tag: { slug: tag } } };
+  }
+
   const notes: Array<{
     id: string;
     title: string;
@@ -11,7 +22,7 @@ export default async function NotesPage() {
     maturity: string;
     updatedAt: Date;
   }> = await prisma.note.findMany({
-    where: { status: "PUBLIC" },
+    where,
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -22,6 +33,15 @@ export default async function NotesPage() {
       updatedAt: true,
     },
   });
+
+  // Получаем информацию о теге для заголовка
+  let tagName = null;
+  if (tag) {
+    const tagInfo = await prisma.tag.findUnique({
+      where: { slug: tag },
+    });
+    tagName = tagInfo?.name || tag;
+  }
 
   return (
     <div className="min-h-screen">
@@ -37,10 +57,29 @@ export default async function NotesPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Все заметки</h1>
-          <p className="text-muted">
-            {notes.length} публичных заметок в базе знаний
-          </p>
+          {tag ? (
+            <>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                Заметки с тегом: {tagName}
+              </h1>
+              <p className="text-muted">
+                {notes.length} заметок с тегом "{tagName}"
+              </p>
+              <Link
+                href="/notes"
+                className="inline-block mt-2 text-sm text-secondary hover:text-primary-light"
+              >
+                ← Показать все заметки
+              </Link>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">Все заметки</h1>
+              <p className="text-muted">
+                {notes.length} публичных заметок в базе знаний
+              </p>
+            </>
+          )}
         </div>
 
         {/* Notes Grid */}

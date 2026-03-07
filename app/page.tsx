@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { KnowledgeGraph } from "@/components/dashboard/KnowledgeGraph";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { AISearch } from "@/components/dashboard/AISearch";
@@ -46,18 +47,18 @@ export default function HomePage() {
           <div className="glass rounded-2xl p-6">
             <h3 className="text-lg font-semibold mb-4">Быстрые ссылки</h3>
             <div className="space-y-2">
-              <a
+<Link
                 href="/admin"
                 className="block p-3 rounded-xl surface hover:surface-hover transition-colors"
               >
                 <span className="text-primary-light">→</span> Админ-панель
-              </a>
-              <a
+              </Link>
+<Link
                 href="/notes"
                 className="block p-3 rounded-xl surface hover:surface-hover transition-colors"
               >
                 <span className="text-primary-light">→</span> Все заметки
-              </a>
+              </Link>
             </div>
           </div>
         </div>

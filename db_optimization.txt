@@ -1,0 +1,287 @@
+ ✓ Compiled /api/graph in 894ms (2731 modules)
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."maturity"::text, "public"."Note"."updatedAt" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") ORDER BY "public"."Note"."updatedAt" DESC LIMIT $2 OFFSET $3
+ GET /api/notes/recent 200 in 1108ms
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."maturity"::text FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT "public"."NoteTag"."noteId", "public"."NoteTag"."tagId" FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) OFFSET $28
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT "public"."Tag"."id", "public"."Tag"."name" FROM "public"."Tag" WHERE "public"."Tag"."id" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$90,$91,$92,$93,$94,$95,$96,$97,$98) OFFSET $99
+ GET /api/notes/stats 200 in 1125ms
+prisma:query SELECT "public"."Backlink"."id", "public"."Backlink"."sourceNoteId", "public"."Backlink"."targetNoteId" FROM "public"."Backlink" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Note"."id", "public"."Note"."embedding" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND (NOT "public"."Note"."embedding" IS NULL)) OFFSET $2
+ GET /api/graph 200 in 1022ms
+ ✓ Compiled /admin in 371ms (2748 modules)
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE 1=1 OFFSET $1) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."updatedAt" FROM "public"."Note" WHERE 1=1 ORDER BY "public"."Note"."updatedAt" DESC LIMIT $1 OFFSET $2
+ GET /admin 200 in 537ms
+ ✓ Compiled /admin/notes in 412ms (2767 modules)
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt" FROM "public"."Note" WHERE 1=1 ORDER BY "public"."Note"."updatedAt" DESC OFFSET $1
+prisma:query SELECT "public"."User"."id", "public"."User"."name" FROM "public"."User" WHERE "public"."User"."id" IN ($1) OFFSET $2
+prisma:query SELECT "public"."NoteTag"."noteId", "public"."NoteTag"."tagId" FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) OFFSET $28
+ GET /admin/notes 200 in 555ms
+ ✓ Compiled /api/ai/optimize/batch in 479ms (2770 modules)
+prisma:query SELECT "public"."Tag"."id", "public"."Tag"."name", "public"."Tag"."slug" FROM "public"."Tag" WHERE 1=1 ORDER BY "public"."Tag"."name" ASC OFFSET $1
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title" FROM "public"."Note" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Tag"."id", "public"."Tag"."name", "public"."Tag"."slug" FROM "public"."Tag" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."content" FROM "public"."Note" WHERE "public"."Note"."id" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) OFFSET $28
+[PHASE 2] Starting 27 AI requests in parallel at: 2026-03-07T15:09:40.034Z
+[OPTIMIZE] AI request for "ELK Stack основы" completed in 872ms
+[OPTIMIZE] AI request for "Tomcat настройка" completed in 913ms
+[OPTIMIZE] AI request for "Docker Compose для разработки" completed in 931ms
+[OPTIMIZE] AI request for "Python для DevOps" completed in 986ms
+[OPTIMIZE] AI request for "PowerShell для администрирования Windows Server" completed in 1044ms
+[OPTIMIZE] AI request for "IBM MQ обзор" completed in 1119ms
+[OPTIMIZE] AI request for "Основы командной строки Linux" completed in 1198ms
+[OPTIMIZE] AI request for "Active Directory и GPO" completed in 1447ms
+[OPTIMIZE] AI request for "Bash скриптинг" completed in 1477ms
+[OPTIMIZE] AI request for "Oracle Database основы" completed in 1494ms
+[OPTIMIZE] AI request for "PostgreSQL администрирование" completed in 1494ms
+[OPTIMIZE] AI request for "Kubernetes архитектура" completed in 1501ms
+[OPTIMIZE] AI request for "Банковская безопасность" completed in 1659ms
+[OPTIMIZE] AI request for "Prometheus и Grafana" completed in 1703ms
+[OPTIMIZE] AI request for "Службы и сервисы Windows Server" completed in 1699ms
+[OPTIMIZE] AI request for "CI/CD основы" completed in 1716ms
+[OPTIMIZE] AI request for "RabbitMQ основы" completed in 1744ms
+[OPTIMIZE] AI request for "MongoDB основы" completed in 1761ms
+[OPTIMIZE] AI request for "Nginx конфигурация" completed in 1764ms
+[OPTIMIZE] AI request for "Docker основы" completed in 1789ms
+[OPTIMIZE] AI request for "IIS настройка" completed in 1799ms
+[OPTIMIZE] AI request for "ДБО системы обзор" completed in 1807ms
+[OPTIMIZE] AI request for "Agile методологии" completed in 1860ms
+[OPTIMIZE] AI request for "Права доступа в Linux" completed in 1842ms
+[OPTIMIZE] AI request for "Управление пользователями в Linux" completed in 2230ms
+[OPTIMIZE] AI request for "ITIL процессы" completed in 2448ms
+[OPTIMIZE] AI request for "Apache Kafka основы" completed in 4037ms
+[PHASE 2] All AI requests completed at: 2026-03-07T15:14:43.678Z
+[PHASE 3] Starting DB writes at: 2026-03-07T15:14:43.678Z
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Agile методологии" completed in 35ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Банковская безопасность" completed in 57ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "ITIL процессы" completed in 11ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "ДБО системы обзор" completed in 14ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10), ($11,$12), ($13,$14)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Bash скриптинг" completed in 13ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "CI/CD основы" completed in 11ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "ELK Stack основы" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10), ($11,$12), ($13,$14)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "IIS настройка" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Python для DevOps" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Prometheus и Grafana" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Tomcat настройка" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Apache Kafka основы" completed in 9ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "RabbitMQ основы" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "MongoDB основы" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Nginx конфигурация" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "IBM MQ обзор" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Oracle Database основы" completed in 9ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Kubernetes архитектура" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Docker основы" completed in 11ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "PostgreSQL администрирование" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "PowerShell для администрирования Windows Server" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Службы и сервисы Windows Server" completed in 10ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Active Directory и GPO" completed in 12ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Docker Compose для разработки" completed in 11ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Основы командной строки Linux" completed in 11ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8), ($9,$10)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Управление пользователями в Linux" completed in 11ms
+prisma:query BEGIN
+prisma:query UPDATE "public"."Note" SET "content" = $1, "optimizedAt" = $2, "updatedAt" = $3 WHERE ("public"."Note"."id" = $4 AND 1=1) RETURNING "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt"
+prisma:query DELETE FROM "public"."Backlink" WHERE "public"."Backlink"."sourceNoteId" = $1
+prisma:query DELETE FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" = $1
+prisma:query INSERT INTO "public"."NoteTag" ("noteId","tagId") VALUES ($1,$2), ($3,$4), ($5,$6), ($7,$8)
+prisma:query COMMIT
+[OPTIMIZE] DB write for "Права доступа в Linux" completed in 10ms
+ POST /api/ai/optimize/batch 200 in 304584ms
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."content", "public"."Note"."excerpt", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."embedding", "public"."Note"."optimizedAt", "public"."Note"."authorId", "public"."Note"."createdAt", "public"."Note"."updatedAt" FROM "public"."Note" WHERE 1=1 ORDER BY "public"."Note"."updatedAt" DESC OFFSET $1
+prisma:query SELECT "public"."User"."id", "public"."User"."name" FROM "public"."User" WHERE "public"."User"."id" IN ($1) OFFSET $2
+prisma:query SELECT "public"."NoteTag"."noteId", "public"."NoteTag"."tagId" FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) OFFSET $28
+ GET /admin/notes 200 in 328ms
+prisma:query SELECT 1
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE 1=1 OFFSET $1) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."status"::text, "public"."Note"."maturity"::text, "public"."Note"."updatedAt" FROM "public"."Note" WHERE 1=1 ORDER BY "public"."Note"."updatedAt" DESC LIMIT $1 OFFSET $2
+ GET /admin 200 in 79ms
+ GET / 200 in 27ms
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."maturity"::text FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2
+prisma:query SELECT "public"."NoteTag"."noteId", "public"."NoteTag"."tagId" FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) OFFSET $28
+prisma:query SELECT "public"."Tag"."id", "public"."Tag"."name" FROM "public"."Tag" WHERE "public"."Tag"."id" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89) OFFSET $90
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."maturity"::text, "public"."Note"."updatedAt" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") ORDER BY "public"."Note"."updatedAt" DESC LIMIT $2 OFFSET $3
+ GET /api/notes/recent 200 in 62ms
+prisma:query SELECT "public"."Backlink"."id", "public"."Backlink"."sourceNoteId", "public"."Backlink"."targetNoteId" FROM "public"."Backlink" WHERE 1=1 OFFSET $1
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+ GET /api/notes/stats 200 in 67ms
+prisma:query SELECT "public"."Note"."id", "public"."Note"."embedding" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND (NOT "public"."Note"."embedding" IS NULL)) OFFSET $2
+ GET /api/graph 200 in 71ms
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2) AS "sub"
+prisma:query SELECT COUNT(*) AS "_count$_all" FROM (SELECT "public"."Note"."id" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND "public"."Note"."maturity" = CAST($2::text AS "public"."Maturity")) OFFSET $3) AS "sub"
+ GET /api/notes/stats 200 in 39ms
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."maturity"::text, "public"."Note"."updatedAt" FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") ORDER BY "public"."Note"."updatedAt" DESC LIMIT $2 OFFSET $3
+ GET /api/notes/recent 200 in 46ms
+prisma:query SELECT "public"."Note"."id", "public"."Note"."title", "public"."Note"."slug", "public"."Note"."maturity"::text FROM "public"."Note" WHERE "public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") OFFSET $2
+prisma:query SELECT "public"."NoteTag"."noteId", "public"."NoteTag"."tagId" FROM "public"."NoteTag" WHERE "public"."NoteTag"."noteId" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27) OFFSET $28
+prisma:query SELECT "public"."Tag"."id", "public"."Tag"."name" FROM "public"."Tag" WHERE "public"."Tag"."id" IN ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67,$68,$69,$70,$71,$72,$73,$74,$75,$76,$77,$78,$79,$80,$81,$82,$83,$84,$85,$86,$87,$88,$89) OFFSET $90
+prisma:query SELECT "public"."Backlink"."id", "public"."Backlink"."sourceNoteId", "public"."Backlink"."targetNoteId" FROM "public"."Backlink" WHERE 1=1 OFFSET $1
+prisma:query SELECT "public"."Note"."id", "public"."Note"."embedding" FROM "public"."Note" WHERE ("public"."Note"."status" = CAST($1::text AS "public"."NoteStatus") AND (NOT "public"."Note"."embedding" IS NULL)) OFFSET $2
+ GET /api/graph 200 in 51ms
