@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
         // Предзагружаем все заметки для backlinks
         const allNotesForBacklinks = await prisma.note.findMany({
-          select: { id: true, title: true },
+          select: { id: true, title: true, slug: true },
         });
 
         // Предзагружаем все существующие теги для оптимизации работы с ними
