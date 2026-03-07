@@ -1,4 +1,7 @@
 import prisma from "@/lib/prisma";
+
+// Отключаем статическую генерацию - страница должна рендериться на сервере
+export const dynamic = 'force-dynamic';
 import { getMaturityEmoji } from "@/lib/utils";
 import Link from "next/link";
 

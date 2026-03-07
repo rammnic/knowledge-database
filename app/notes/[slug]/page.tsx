@@ -1,4 +1,7 @@
 import { notFound } from "next/navigation";
+
+// Отключаем статическую генерацию - страница должна рендериться на сервере
+export const dynamic = 'force-dynamic';
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { MarkdownRenderer } from "@/components/article/MarkdownRenderer";
