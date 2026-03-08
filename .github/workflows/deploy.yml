@@ -65,6 +65,9 @@ jobs:
             # Перейти в директорию проекта
             cd /opt/knowledge-database
 
+            # Обновить исходный код
+            git pull origin main
+
             # Логин в Docker Hub
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
