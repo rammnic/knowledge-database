@@ -30,9 +30,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files from builder
-# Create public directory if it doesn't exist (Next.js may not create it in standalone mode)
-RUN mkdir -p /app/public
-COPY --from=builder /app/public ./public || true
+# Note: public folder is already included in standalone output by Next.js
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
