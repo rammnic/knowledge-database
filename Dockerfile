@@ -40,21 +40,9 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # Install all node_modules
 COPY --from=builder /app/node_modules/ ./node_modules/
 
-# Create entrypoint script for database migrations
-RUN echo '#!/bin/sh\n\
-set -e\n\
-\n\
-echo "Checking database migrations..."\n\
-\n\
-# Mark init migration as applied for existing databases\n# This handles the case where database was created before migrations were properly set up\n\
-echo "Marking init migration as applied (if needed)..."\n\
-npx prisma migrate resolve --applied 20260307000000_init --schema /app/prisma/schema.prisma 2>/dev/null || true\n\
-\n\
-echo "Running database migrations..."\n\
-npx prisma migrate deploy\n\
-\n\
-echo "Starting application..."\n\
-exec node server.js' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Copy entrypoint script for database migrations
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # Set proper permissions
 RUN chown -R nextjs:nodejs /app

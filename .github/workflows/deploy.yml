@@ -71,6 +71,12 @@ jobs:
             # Логин в Docker Hub
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+            # Остановить контейнеры перед очисткой
+            docker compose down
+
+            # Очистить неиспользуемые образы и volumes
+            docker system prune -a -f --volumes
+
             # Стянуть новый образ
             docker compose pull
 
