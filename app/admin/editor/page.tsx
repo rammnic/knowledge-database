@@ -51,16 +51,11 @@ function EditorPageContent() {
     try {
       const method = noteId ? "PUT" : "POST";
       const endpoint = noteId ? `/api/notes/${noteId}` : "/api/notes";
-      const secretToken = process.env.NEXT_PUBLIC_SECRET_TOKEN;
       
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (secretToken) {
-        headers["Authorization"] = `Bearer ${secretToken}`;
-      }
-      
+      // Cookie отправляется автоматически браузером
       const res = await fetch(endpoint, {
         method,
-        headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, content, status, maturity }),
       });
 

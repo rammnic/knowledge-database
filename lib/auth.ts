@@ -11,6 +11,15 @@ export function verifyAuth(request: NextRequest): boolean {
     return false;
   }
   
+  // Сначала проверяем cookie (cookie-based auth)
+  const authCookie = request.cookies.get("admin_token");
+  if (authCookie?.value) {
+    if (authCookie.value === secretToken) {
+      return true;
+    }
+  }
+  
+  // Fallback: проверяем заголовок Authorization (backward compatibility)
   const authHeader = request.headers.get("Authorization");
   
   if (!authHeader) {
