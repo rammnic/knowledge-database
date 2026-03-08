@@ -5,8 +5,8 @@ CREATE TABLE "User" (
     "name" TEXT,
     "role" TEXT NOT NULL DEFAULT 'USER',
     "password" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateTable
@@ -19,10 +19,10 @@ CREATE TABLE "Note" (
     "status" TEXT NOT NULL DEFAULT 'DRAFT',
     "maturity" TEXT NOT NULL DEFAULT 'SEED',
     "embedding" TEXT,
-    "optimizedAt" DATETIME,
+    "optimizedAt" TIMESTAMP,
     "authorId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL,
     CONSTRAINT "Note_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -31,7 +31,7 @@ CREATE TABLE "Tag" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -49,7 +49,7 @@ CREATE TABLE "Backlink" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "sourceNoteId" TEXT NOT NULL,
     "targetNoteId" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Backlink_sourceNoteId_fkey" FOREIGN KEY ("sourceNoteId") REFERENCES "Note" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "Backlink_targetNoteId_fkey" FOREIGN KEY ("targetNoteId") REFERENCES "Note" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -59,8 +59,8 @@ CREATE TABLE "Settings" (
     "id" TEXT NOT NULL PRIMARY KEY DEFAULT 'default',
     "siteName" TEXT NOT NULL DEFAULT 'Knowledge Database',
     "siteDescription" TEXT NOT NULL DEFAULT 'Персональная база знаний',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP NOT NULL
 );
 
 -- CreateIndex

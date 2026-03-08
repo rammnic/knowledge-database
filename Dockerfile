@@ -40,6 +40,16 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 # Install all node_modules
 COPY --from=builder /app/node_modules/ ./node_modules/
 
+# Create entrypoint script for database migrations
+RUN echo '#!/bin/sh\n\
+set -e\n\
+\n\
+echo "Running database migrations..."\n\
+npx prisma migrate deploy\n\
+\n\
+echo "Starting application..."\n\
+exec node server.js' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
 # Set proper permissions
 RUN chown -R nextjs:nodejs /app
 
@@ -56,5 +66,6 @@ ENV HOSTNAME="0.0.0.0"
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://127.0.0.1:3000/api/health || exit 1
 
-# Start the application
+# Start the application with entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "server.js"]
