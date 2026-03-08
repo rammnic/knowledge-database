@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Проверить авторизационный токен из заголовка
+ * Проверить авторизационный токен из заголовка (для API)
  */
 export function verifyAuth(request: NextRequest): boolean {
-  const secretToken = process.env.NEXT_PUBLIC_SECRET_TOKEN;
+  const secretToken = process.env.SECRET_TOKEN;
   
   if (!secretToken) {
-    console.error("❌ NEXT_PUBLIC_SECRET_TOKEN не настроен в .env");
+    console.error("❌ SECRET_TOKEN не настроен в .env");
     return false;
   }
   
@@ -25,6 +25,31 @@ export function verifyAuth(request: NextRequest): boolean {
   
   // Также поддерживаем токен напрямую
   return authHeader === secretToken;
+}
+
+/**
+ * Проверить авторизацию через cookie (для middleware/SSR)
+ */
+export function verifyAuthFromCookie(request: NextRequest): boolean {
+  // В dev режиме пропускаем
+  if (process.env.NODE_ENV === "development") {
+    return true;
+  }
+
+  const secretToken = process.env.SECRET_TOKEN;
+  
+  if (!secretToken) {
+    console.error("❌ SECRET_TOKEN не настроен в .env");
+    return false;
+  }
+  
+  const authCookie = request.cookies.get("admin_token");
+  
+  if (!authCookie || !authCookie.value) {
+    return false;
+  }
+  
+  return authCookie.value === secretToken;
 }
 
 /**
