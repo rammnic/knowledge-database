@@ -27,9 +27,8 @@ services:
       - knowledge-network
 
   knowledge-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: rammnic1/knowledge:latest
+    pull_policy: always
     container_name: knowledge-app
     ports:
       - "127.0.0.1:3002:3000"
